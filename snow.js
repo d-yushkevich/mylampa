@@ -267,25 +267,39 @@
                  },
                  onChange: function (value) {
                      Lampa.Storage.set("Snow", value);
+
                      if (value) {
                          setTimeout(enableSnow, 100);
                      } else {
                          try {
-                             // Останавливаем все активные снегопады корректно
+                             // Находим все активные snowfall-инстансы и завершаем их
                              $(".background").each(function () {
                                  var instance = $(this).data("snowfall");
-                                 if (instance && typeof instance.clear === "function") {
-                                     instance.clear();
+                                 if (instance) {
+                                     // Безопасно останавливаем анимацию
+                                     instance.isPaused = true;
+
+                                     if (instance.animationId) {
+                                         cancelAnimationFrame(instance.animationId);
+                                         instance.animationId = 0;
+                                     }
+
+                                     if (typeof instance.clear === "function") {
+                                         instance.clear();
+                                     }
                                  }
                              });
-                             
-                             $(".snowfall-flake").remove(); // На всякий случай
+
+                             // Удаляем остатки снежинок из DOM
+                             $(".snowfall-flake").remove();
+
                              Lampa.Noty.show("Снегопад отключен");
                          } catch (e) {
                              console.error("Ошибка при остановке снега:", e);
                          }
                      }
                  },
+
 
                  onRender: function (element) {
                      setTimeout(function () {
@@ -302,9 +316,16 @@
          
          function enableSnow() {
              try {
-                 // Удаляем старые снежинки если есть
+                 // Очищаем старый снег, если есть
+                 $(".background").each(function () {
+                     var instance = $(this).data("snowfall");
+                     if (instance && typeof instance.clear === "function") {
+                         instance.clear();
+                     }
+                 });
                  $(".snowfall-flake").remove();
-                 
+
+                 // Запускаем новый снегопад
                  var blizzardConfig = {
                      flakeCount: 100,
                      minSize: 3,
@@ -318,13 +339,13 @@
                      twinkle: true,
                      meltEffect: true
                  };
-                 
+
                  $(".background").snowfall(blizzardConfig);
-                 
              } catch (error) {
                  console.error("Snow initialization error:", error);
              }
          }
+
          
          if (window.appready) {
              initializeSnow();
