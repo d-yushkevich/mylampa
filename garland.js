@@ -55,13 +55,13 @@
 
        this.clear = function () {
          clearInterval(interval);
-         $(container).remove(); // полностью удаляем контейнер
+         $(container).remove();
        };
 
-       // Инициализация контейнера
        $(container).addClass("garland-container").css({
          position: "fixed",
-         top: "0",
+         top: options.position === "bottom" ? "auto" : "0",
+         bottom: options.position === "bottom" ? "0" : "auto",
          left: "0",
          width: "100%",
          height: "40px",
@@ -71,8 +71,6 @@
        });
 
        createBulbs();
-
-       // Сохраняем экземпляр для корректного вызова clear
        $(container).data("garland", this);
      };
 
@@ -128,12 +126,15 @@
 
        function showGarland() {
          window.garland = true;
-         const options = {
-           bulbCount: 40,
-           bulbSize: 14
-         };
-         if ($(".garland-wrapper").length === 0) {
-           $("<div class='garland-wrapper'></div>").appendTo("body").garland(options);
+         const optionsTop = { bulbCount: 40, bulbSize: 14, position: "top" };
+         const optionsBottom = { bulbCount: 40, bulbSize: 14, position: "bottom" };
+
+         if ($(".garland-top").length === 0) {
+           $("<div class='garland-wrapper garland-top'></div>").appendTo("body").garland(optionsTop);
+         }
+
+         if ($(".garland-bottom").length === 0) {
+           $("<div class='garland-wrapper garland-bottom'></div>").appendTo("body").garland(optionsBottom);
          }
        }
 
