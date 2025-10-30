@@ -5,6 +5,9 @@
 
    (function (a) {
      a.garland = function (b, c) {
+       let bulbs = [];
+       let interval;
+
        function createBulbs() {
          var count = c.bulbCount;
          var colors = ['#FF0000', '#00FF00', '#FFD700', '#00BFFF', '#FF69B4', '#FF8C00'];
@@ -35,7 +38,7 @@
        }
 
        function animateBulbs() {
-         setInterval(() => {
+         interval = setInterval(() => {
            bulbs.forEach((bulb, i) => {
              let opacity = Math.random() * 0.5 + 0.5;
              let shift = Math.sin(Date.now() / 1000 + i) * 3;
@@ -46,7 +49,6 @@
          }, 300);
        }
 
-       let bulbs = [];
        a(b).addClass("garland-container").css({
          position: "fixed",
          top: "0",
@@ -61,21 +63,20 @@
        createBulbs();
 
        this.clear = function () {
-         a(".garland-container").remove();
+         clearInterval(interval);
+         a(b).remove(); // ✅ полностью удаляем контейнер
        };
      };
 
      a.fn.garland = function (b) {
        if (typeof b == "object" || b == undefined) {
-         return this.each(function (c) {
+         return this.each(function () {
            new a.garland(this, b);
          });
        } else if (typeof b == "string") {
-         return this.each(function (b) {
-           var c = a(this).data("garland");
-           if (c) {
-             c.clear();
-           }
+         return this.each(function () {
+           var instance = a(this).data("garland");
+           if (instance) instance.clear();
          });
        }
      };
@@ -96,7 +97,7 @@
            name: "Показывать новогоднюю гирлянду"
          },
          onChange: function () {
-           if (Lampa.Storage.field("NewYearGarland") == true) {
+           if (Lampa.Storage.field("NewYearGarland") === true) {
              showGarland();
            } else {
              hideGarland();
@@ -104,12 +105,12 @@
          },
          onRender: function () {
            setTimeout(function () {
-             $("div[data-name=\"NewYearGarland\"]").insertAfter("div[data-name=\"black_style\"]");
+             $("div[data-name='NewYearGarland']").insertAfter("div[data-name='black_style']");
            }, 0);
          }
        });
 
-       if (Lampa.Storage.field("NewYearGarland") == true) {
+       if (Lampa.Storage.field("NewYearGarland") === true) {
          showGarland();
        } else {
          hideGarland();
@@ -121,12 +122,16 @@
            bulbCount: 40,
            bulbSize: 14
          };
-         $("<div class='garland-wrapper'></div>").appendTo("body").garland(options);
+         if ($(".garland-wrapper").length === 0) {
+           $("<div class='garland-wrapper'></div>").appendTo("body").garland(options);
+         }
        }
 
        function hideGarland() {
          window.garland = false;
-         $(".garland-wrapper").garland("clear");
+         $(".garland-wrapper").each(function () {
+           $(this).garland("clear");
+         });
        }
      }
 
@@ -134,7 +139,7 @@
        initGarland();
      } else {
        Lampa.Listener.follow("app", function (b) {
-         if (b.type == "ready") {
+         if (b.type === "ready") {
            initGarland();
          }
        });
