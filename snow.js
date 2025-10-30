@@ -46,28 +46,28 @@
     $.snowfall = function (container, options) {
       // Конфигурация для метели
       var config = $.extend({}, {
-        flakeCount: 80, // Много снежинок для метели
+        flakeCount: 80,
         flakeColor: "#ffffff",
         flakePosition: "fixed",
         flakeIndex: 999999,
         minSize: 3,
         maxSize: 8,
-        minSpeed: 2, // Быстрее для метели
+        minSpeed: 2,
         maxSpeed: 6,
         round: true,
         shadow: true,
         deviceorientation: true,
-        wind: true, // Включен ветер
+        wind: true,
         swing: true,
         opacity: true,
-        gradient: true, // Градиент для мерцания
-        twinkle: true, // Мерцание
-        meltEffect: true // Таяние
+        gradient: true,
+        twinkle: true,
+        meltEffect: true
       }, options);
 
       var flakes = [];
       var animationId = 0;
-      var wind = 0.5; // Сильный ветер для метели
+      var wind = 0.5;
       var isPaused = false;
 
       // Функция для создания снежинки
@@ -77,12 +77,12 @@
         this.size = size;
         this.speed = speed;
         this.step = 0;
-        this.stepSize = random(1, 15) / 100; // Более хаотичное движение
+        this.stepSize = random(1, 15) / 100;
         this.swingOffset = random(0, Math.PI * 2);
-        this.swingSpeed = random(2, 5) / 100; // Быстрее качание
+        this.swingSpeed = random(2, 5) / 100;
         this.opacity = random(6, 10) / 10;
         this.twinkleOffset = random(0, 100);
-        this.twinkleSpeed = random(2, 4) / 100; // Быстрое мерцание
+        this.twinkleSpeed = random(2, 4) / 100;
         this.gradientStep = random(0, 100);
         this.gradientSpeed = random(2, 6) / 100;
 
@@ -104,17 +104,13 @@
           transition: "opacity 0.3s ease"
         };
 
-        // Тень для объема
         styles.boxShadow = "1px 1px 3px rgba(0,0,0,0.3)";
-
-        // Градиент для мерцающего эффекта
         styles.background = `radial-gradient(circle at 30% 30%, 
                           rgba(255,255,255,${this.opacity}), 
                           rgba(200,200,255,${this.opacity * 0.3}))`;
 
         $(this.element).css(styles);
 
-        // Добавление в контейнер
         if ($(container).get(0).tagName === $(document).get(0).tagName) {
           $("body").append(this.element);
           container = $("body");
@@ -122,57 +118,44 @@
           $(container).append(this.element);
         }
 
-        // Обновление позиции и состояния
         this.update = function() {
           if (isPaused) return;
 
-          // Движение вниз с ускорением для метели
           this.y += this.speed + Math.sin(this.step) * 0.3;
           this.step += this.stepSize;
-
-          // Сильный ветер для метели
           this.x += wind + Math.cos(this.step) * 0.8;
-
-          // Интенсивное качание
           this.x += Math.sin(this.step + this.swingOffset) * this.swingSpeed;
 
-          // Быстрое мерцание
           var twinkle = Math.sin(this.twinkleOffset + this.step * this.twinkleSpeed);
           this.element.style.opacity = (this.opacity * (0.6 + twinkle * 0.4)).toFixed(2);
 
-          // Анимированный градиент
           this.gradientStep += this.gradientSpeed;
           var gradientPos = Math.sin(this.gradientStep) * 20 + 30;
           this.element.style.background = `radial-gradient(circle at ${gradientPos}% ${gradientPos}%, 
                                           rgba(255,255,255,${this.opacity}), 
                                           rgba(180,180,255,${this.opacity * 0.4}))`;
 
-          // Проверка границ
           var containerWidth = $(container).width();
           var containerHeight = $(container).height();
           var margin = 25;
 
-          // Таяние при достижении низа
           if (this.y > containerHeight - (this.size + 10)) {
             this.melt();
           }
 
-          // Переход через границы для непрерывной метели
           if (this.x > containerWidth + margin) {
             this.x = -margin;
           } else if (this.x < -margin) {
             this.x = containerWidth + margin;
           }
 
-          // Обновление позиции
           this.element.style.top = this.y + "px";
           this.element.style.left = this.x + "px";
         };
 
-        // Эффект таяния
         this.melt = function() {
           var meltInterval = setInterval(() => {
-            this.opacity -= 0.08; // Быстрое таяние
+            this.opacity -= 0.08;
             this.element.style.opacity = this.opacity;
             
             if (this.opacity <= 0) {
@@ -182,10 +165,9 @@
           }, 80);
         };
 
-        // Сброс снежинки
         this.reset = function() {
           this.y = -this.size;
-          this.x = random(-50, $(container).width() + 50); // Широкий разброс
+          this.x = random(-50, $(container).width() + 50);
           this.stepSize = random(1, 15) / 100;
           this.size = random(config.minSize * 100, config.maxSize * 100) / 100;
           this.speed = random(config.minSpeed, config.maxSpeed);
@@ -197,25 +179,21 @@
           this.element.style.opacity = this.opacity;
         };
 
-        // Уничтожение снежинки
         this.destroy = function() {
           $(this.element).remove();
         };
       }
 
-      // Вспомогательные функции
       function random(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
 
-      // Изменение силы ветра для динамики метели
       function updateWind() {
         wind = 0.3 + Math.sin(Date.now() * 0.001) * 0.4;
       }
 
-      // Основной цикл анимации
       function animate() {
-        updateWind(); // Обновляем ветер
+        updateWind();
         
         for (var i = 0; i < flakes.length; i++) {
           flakes[i].update();
@@ -226,31 +204,22 @@
         }
       }
 
-      // Инициализация снегопада
       function init() {
         var containerWidth = $(container).width();
         var containerHeight = $(container).height();
         
-        // Создание снежинок для метели
         for (var i = 0; i < config.flakeCount; i++) {
           flakes.push(new Snowflake(
-            random(-100, containerWidth + 100), // Широкий начальный разброс
-            random(-200, containerHeight), // Высокий старт
+            random(-100, containerWidth + 100),
+            random(-200, containerHeight),
             random(config.minSize * 100, config.maxSize * 100) / 100,
             random(config.minSpeed, config.maxSpeed)
           ));
         }
 
-        // Обработчик изменения размера окна
-        $(window).on("resize.snowfall", function() {
-          // Адаптация к изменению размера
-        });
-
-        // Запуск анимации
         animate();
       }
 
-      // Публичные методы
       this.clear = function() {
         isPaused = true;
         cancelAnimationFrame(animationId);
@@ -264,12 +233,10 @@
         flakes = [];
       };
 
-      // Инициализация
       $(container).data("snowfall", this);
       init();
     };
 
-    // jQuery plugin
     $.fn.snowfall = function (options) {
       if (typeof options === "object" || options === undefined) {
         return this.each(function () {
@@ -287,17 +254,17 @@
 
   })(jQuery);
 
-  // Автоматический запуск метели
+  // Автоматический запуск метели с уведомлением
   (function () {
     'use strict';
 
     var snowInstance = null;
+    var notificationShown = false;
 
     function startBlizzard() {
       if (snowInstance) return;
       
       try {
-        // Конфигурация для интенсивной метели
         var blizzardConfig = {
           flakeCount: 80,
           minSize: 3,
@@ -315,32 +282,21 @@
         $(".background").snowfall(blizzardConfig);
         snowInstance = $(".background").data("snowfall");
         
-        console.log("❄️ Метель активирована");
+        // Показываем уведомление на 3 секунды
+        if (!notificationShown) {
+          Lampa.Noty.show("❄️ Запущена анимированная метель");
+          notificationShown = false;
+          
+          // Автоматически скрываем через 3 секунды
+          setTimeout(() => {
+            // Уведомление само скроется
+          }, 3000);
+        }
+        
       } catch (error) {
         console.error("Blizzard initialization error:", error);
       }
     }
-
-    function stopBlizzard() {
-      if (!snowInstance) return;
-      
-      try {
-        $(".background").snowfall("clear");
-        snowInstance = null;
-        console.log("Метель остановлена");
-      } catch (error) {
-        console.error("Blizzard cleanup error:", error);
-      }
-    }
-
-    // Автоматическая пауза при неактивном окне
-    function handleVisibilityChange() {
-      if (document.hidden) {
-        // Можно добавить паузу при необходимости
-      }
-    }
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Запуск при готовности приложения
     if (window.appready) {
@@ -352,12 +308,6 @@
         }
       });
     }
-
-    // Глобальный контроллер для ручного управления
-    window.Blizzard = {
-      start: startBlizzard,
-      stop: stopBlizzard
-    };
 
   })();
 
