@@ -11,65 +11,63 @@
 
        const settings = $.extend({
          leafCount: 20,
-         leafSize: 20,
+         leafSizeMin: 20,
+         leafSizeMax: 40,
          colors: ['#FF6B35', '#FFA62B', '#D4A76A', '#8B4513', '#CD853F', '#DA9100'],
-         top: true // true = сверху, false = снизу
+         top: true
        }, options);
 
-       function createLeaves() {
-         const containerHeight = settings.top ? 0 : window.innerHeight - settings.leafSize;
-         for (let i = 0; i < settings.leafCount; i++) {
-           const leaf = document.createElement("div");
-           const color = settings.colors[Math.floor(Math.random() * settings.colors.length)];
+       function random(a, b) {
+         return a + Math.random() * (b - a);
+       }
 
-           $(leaf).addClass("leaf-garland").css({
-             backgroundColor: color,
-             width: settings.leafSize + "px",
-             height: settings.leafSize + "px",
-             borderRadius: "50% 0 50% 0",
-             position: "fixed",
-             top: containerHeight + "px",
-             left: (i * (window.innerWidth / settings.leafCount)) + "px",
-             transition: "opacity 0.5s, transform 1s ease-in-out",
-             opacity: 1
-           });
+       function createLeaf(i) {
+         const leaf = document.createElement("div");
+         const color = settings.colors[Math.floor(random(0, settings.colors.length))];
+         const size = random(settings.leafSizeMin, settings.leafSizeMax);
 
-           $(container).append($(leaf));
-           leaves.push(leaf);
-         }
+         $(leaf).addClass("leaf-garland-leaf").css({
+           width: size + "px",
+           height: size + "px",
+           position: "fixed",
+           top: settings.top ? "0px" : "auto",
+           bottom: settings.top ? "auto" : "0px",
+           left: (i * (window.innerWidth / settings.leafCount)) + "px",
+           backgroundColor: color,
+           borderRadius: "50% 20% 50% 20%", // имитация листа
+           transform: `rotate(${random(-30, 30)}deg)`,
+           transition: "transform 1s ease-in-out, opacity 0.5s",
+           opacity: random(0.7, 1),
+           zIndex: 999999,
+           pointerEvents: "none"
+         });
 
-         animateLeaves();
+         $(container).append($(leaf));
+         leaves.push({ el: leaf, shift: random(0.5, 2), rotationDir: Math.random() > 0.5 ? 1 : -1 });
        }
 
        function animateLeaves() {
          interval = setInterval(() => {
-           leaves.forEach((leaf, i) => {
-             const shift = Math.sin(Date.now() / 1000 + i) * 5;
-             const opacity = 0.7 + Math.random() * 0.3;
-             leaf.style.transform = `translateY(${shift}px)`;
-             leaf.style.opacity = opacity;
+           leaves.forEach(l => {
+             const shiftY = Math.sin(Date.now() / 1000 * l.shift) * 5;
+             const rotation = parseFloat(l.el.style.transform.replace(/[^\d.-]/g, '')) + l.rotationDir * 2;
+             l.el.style.transform = `rotate(${rotation}deg) translateY(${shiftY}px)`;
+             l.el.style.opacity = 0.7 + Math.random() * 0.3;
            });
          }, 200);
        }
+
+       for (let i = 0; i < settings.leafCount; i++) {
+         createLeaf(i);
+       }
+
+       animateLeaves();
 
        this.clear = function () {
          clearInterval(interval);
          $(container).remove();
        };
 
-       $(container).addClass("leaf-garland-container").css({
-         position: "fixed",
-         top: settings.top ? "0" : "auto",
-         bottom: settings.top ? "auto" : "0",
-         left: "0",
-         width: "100%",
-         height: settings.leafSize + "px",
-         zIndex: 999999,
-         pointerEvents: "none",
-         overflow: "hidden"
-       });
-
-       createLeaves();
        $(container).data("leafGarland", this);
      };
 
@@ -108,10 +106,10 @@
        function showGarland() {
          window.leafGarland = true;
          if ($(".leaf-garland-wrapper-top").length === 0) {
-           $("<div class='leaf-garland-wrapper-top'></div>").appendTo("body").leafGarland({ top: true, leafCount: 20, leafSize: 20 });
+           $("<div class='leaf-garland-wrapper-top'></div>").appendTo("body").leafGarland({ top: true, leafCount: 20 });
          }
          if ($(".leaf-garland-wrapper-bottom").length === 0) {
-           $("<div class='leaf-garland-wrapper-bottom'></div>").appendTo("body").leafGarland({ top: false, leafCount: 20, leafSize: 20 });
+           $("<div class='leaf-garland-wrapper-bottom'></div>").appendTo("body").leafGarland({ top: false, leafCount: 20 });
          }
        }
 
