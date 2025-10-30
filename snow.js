@@ -186,12 +186,14 @@
              }
              
              function animate() {
+                 if (window.__snowPaused) return; // <-- если глобальная пауза — ничего не делаем
+
                  updateWind();
-                 
+
                  for (var i = 0; i < flakes.length; i++) {
                      flakes[i].update();
                  }
-                 
+
                  if (!isPaused) {
                      animationId = requestAnimationFrame(animate);
                  }
@@ -269,36 +271,15 @@
                      Lampa.Storage.set("Snow", value);
 
                      if (value) {
+                         window.__snowPaused = false;
                          setTimeout(enableSnow, 100);
                      } else {
-                         try {
-                             // Находим все активные snowfall-инстансы и завершаем их
-                             $(".background").each(function () {
-                                 var instance = $(this).data("snowfall");
-                                 if (instance) {
-                                     // Безопасно останавливаем анимацию
-                                     instance.isPaused = true;
-
-                                     if (instance.animationId) {
-                                         cancelAnimationFrame(instance.animationId);
-                                         instance.animationId = 0;
-                                     }
-
-                                     if (typeof instance.clear === "function") {
-                                         instance.clear();
-                                     }
-                                 }
-                             });
-
-                             // Удаляем остатки снежинок из DOM
-                             $(".snowfall-flake").remove();
-
-                             Lampa.Noty.show("Снегопад отключен");
-                         } catch (e) {
-                             console.error("Ошибка при остановке снега:", e);
-                         }
+                         window.__snowPaused = true; // <-- стопим снегопад глобально
+                         $(".snowfall-flake").remove();
+                         Lampa.Noty.show("Снегопад отключен");
                      }
                  },
+
 
 
                  onRender: function (element) {
