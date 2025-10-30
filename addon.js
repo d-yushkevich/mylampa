@@ -5,7 +5,7 @@
      * Иконки (вынесены в объект)
      */
     const icons = {
-        add_plugin: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-category"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h6v6h-6z" /><path d="M14 4h6v6h-6z" /><path d="M4 14h6v6h-6z" /><path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /></svg>',
+        add_plugins: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-category"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h6v6h-6z" /><path d="M14 4h6v6h-6z" /><path d="M4 14h6v6h-6z" /><path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /></svg>',
         add_interface_plugin: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-app-window"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M3 5m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v10a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" /><path d="M6 8h.01" /><path d="M9 8h.01" /></svg>',
         add_management_plugin: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-layout-cards"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /><path d="M14 4m0 2a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2z" /></svg>',
         add_online_plugin: '<svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-google-analytics"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 9m0 1.105a1.105 1.105 0 0 1 1.105 -1.105h1.79a1.105 1.105 0 0 1 1.105 1.105v9.79a1.105 1.105 0 0 1 -1.105 1.105h-1.79a1.105 1.105 0 0 1 -1.105 -1.105z" /><path d="M17 3m0 1.105a1.105 1.105 0 0 1 1.105 -1.105h1.79a1.105 1.105 0 0 1 1.105 1.105v15.79a1.105 1.105 0 0 1 -1.105 1.105h-1.79a1.105 1.105 0 0 1 -1.105 -1.105z" /><path d="M5 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /></svg>',
@@ -97,9 +97,9 @@
     */
     // Главная категория «Плагины»
     Lampa.SettingsApi.addComponent({
-        component: 'add_plugin',
+        component: 'add_plugins',
         name: 'Плагины[LOCAL]',
-        icon: icons.add_plugin
+        icon: icons.add_plugins
     });
 
     const subcategories = [
@@ -130,7 +130,7 @@
 
                 // пункт в «Плагинах»
                 Lampa.SettingsApi.addParam({
-                    component: 'add_plugin',
+                    component: 'add_plugins',
                     param: { name: sc.c, type: 'static', default: true },
                     field: { name: sc.n },
                     onRender: (item) => {
@@ -148,7 +148,7 @@
                             Lampa.Settings.create(sc.c);
                             const ctrl = Lampa.Controller.enabled();
                             if (ctrl && ctrl.controller) {
-                                ctrl.controller.back = () => Lampa.Settings.create('add_plugin');
+                                ctrl.controller.back = () => Lampa.Settings.create('add_plugins');
                             }
                         });
                     }
@@ -165,14 +165,14 @@
 
         // поднимаем «Плагины» выше стандартного блока
         setTimeout(() => {
-            $('div[data-component=plugins]').before($('div[data-component=add_plugin]'));
+            $('div[data-component=plugins]').before($('div[data-component=add_plugins]'));
         }, 60);
 
         setTimeout(() => {
             if (!adInited) {
                 // добавляем рекламу как стандартный параметр
                 Lampa.SettingsApi.addParam({
-                    component: 'add_plugin',
+                    component: 'add_plugins',
                     param: { name: 'add_ads', type: 'title' },
                     field: { name: ads }
                 });
