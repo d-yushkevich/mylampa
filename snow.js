@@ -3,14 +3,12 @@
 
    Lampa.Platform.tv();
    
-   // Полифиллы для совместимости
    if (!Date.now) {
      Date.now = function () {
        return new Date().getTime();
      };
    }
 
-   // Улучшенный requestAnimationFrame полифилл
    (function () {
      "use strict";
      var lastTime = 0;
@@ -41,10 +39,8 @@
      }
    })();
 
-   // Улучшенная система снега с эффектами метели
    (function ($) {
      $.snowfall = function (container, options) {
-       // Конфигурация для метели
        var config = $.extend({}, {
          flakeCount: 80,
          flakeColor: "#ffffff",
@@ -71,7 +67,6 @@
        var isPaused = false;
        var containerElement = $(container);
 
-       // Функция для создания снежинки
        function Snowflake(x, y, size, speed) {
          this.x = x;
          this.y = y;
@@ -87,7 +82,6 @@
          this.gradientStep = random(0, 100);
          this.gradientSpeed = random(2, 6) / 100;
 
-         // Создание DOM элемента
          this.element = document.createElement("div");
          this.element.className = "snowfall-flake";
          
@@ -229,7 +223,6 @@
            animationId = 0;
          }
          
-         // Полностью очищаем все снежинки
          for (var i = 0; i < flakes.length; i++) {
            if (flakes[i] && flakes[i].destroy) {
              flakes[i].destroy();
@@ -238,7 +231,7 @@
          
          flakes = [];
          
-         // Дополнительная очистка на случай если что-то осталось
+         // Удаляем все снежинки с страницы
          $(".snowfall-flake").remove();
        };
 
@@ -263,14 +256,14 @@
 
    })(jQuery);
 
-   // Система управления снегом с настройкой
+   // Система управления снегом
    (function () {
      'use strict';
 
      var snowInstance = null;
 
      function initializeSnow() {
-       // Добавляем настройку для включения/выключения снега
+       // Добавляем настройку
        Lampa.SettingsApi.addParam({
          component: "interface",
          param: {
@@ -283,10 +276,11 @@
          },
          onChange: function (value) {
            Lampa.Storage.set("Snow", value);
+           // Немедленно применяем изменения
            if (value) {
-             enableSnow();
+             setTimeout(enableSnow, 100);
            } else {
-             disableSnow();
+             setTimeout(disableSnow, 100);
            }
          },
          onRender: function (element) {
@@ -296,24 +290,22 @@
          }
        });
 
-       // Проверка начального состояния
+       // Автоматический запуск при загрузке
        if (Lampa.Storage.field("Snow") !== false) {
-         setTimeout(enableSnow, 1000);
+         setTimeout(enableSnow, 1500);
        }
      }
 
      function enableSnow() {
-       if (snowInstance) {
-         // Если уже есть инстанс, просто выходим
-         return;
-       }
+       // Если снег уже включен, выходим
+       if (snowInstance) return;
        
        try {
-         // Сначала полностью очищаем возможные остатки
+         // Очищаем возможные остатки
          $(".snowfall-flake").remove();
          
          var blizzardConfig = {
-           flakeCount: 80,
+           flakeCount: 100,
            minSize: 3,
            maxSize: 8,
            minSpeed: 2,
@@ -329,7 +321,7 @@
          $(".background").snowfall(blizzardConfig);
          snowInstance = $(".background").data("snowfall");
          
-         Lampa.Noty.show("❄️ Снегопад включен");
+         console.log("❄️ Снегопад включен");
          
        } catch (error) {
          console.error("Snow initialization error:", error);
@@ -338,7 +330,11 @@
      }
 
      function disableSnow() {
-       if (!snowInstance) return;
+       if (!snowInstance) {
+         // Если инстанса нет, но снежинки есть - очищаем их
+         $(".snowfall-flake").remove();
+         return;
+       }
        
        try {
          // Вызываем clear у инстанса
@@ -351,16 +347,16 @@
          
          snowInstance = null;
          
-         Lampa.Noty.show("Снегопад отключен");
+         console.log("Снегопад отключен");
        } catch (error) {
          console.error("Snow cleanup error:", error);
-         // Принудительная очистка при ошибке
+         // Принудительная очистка
          $(".snowfall-flake").remove();
          snowInstance = null;
        }
      }
 
-     // Инициализация
+     // Запускаем при готовности приложения
      if (window.appready) {
        initializeSnow();
      } else {
@@ -370,6 +366,11 @@
          }
        });
      }
+
+     // Глобальная функция для принудительной очистки
+     window.clearSnowfall = function() {
+       disableSnow();
+     };
 
    })();
 
