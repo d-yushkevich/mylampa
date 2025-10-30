@@ -3,34 +3,38 @@
 
    Lampa.Platform.tv();
 
-   (function (a) {
-     a.garland = function (b, c) {
+   (function ($) {
+     $.garland = function (element, options) {
        let bulbs = [];
        let interval;
+       const container = element;
+
+       const settings = $.extend({
+         bulbCount: 40,
+         bulbSize: 14,
+         colors: ['#FF0000', '#00FF00', '#FFD700', '#00BFFF', '#FF69B4', '#FF8C00']
+       }, options);
 
        function createBulbs() {
-         var count = c.bulbCount;
-         var colors = ['#FF0000', '#00FF00', '#FFD700', '#00BFFF', '#FF69B4', '#FF8C00'];
+         for (let i = 0; i < settings.bulbCount; i++) {
+           const bulb = document.createElement("div");
+           const color = settings.colors[Math.floor(Math.random() * settings.colors.length)];
 
-         for (let i = 0; i < count; i++) {
-           let bulb = document.createElement("div");
-           let color = colors[Math.floor(Math.random() * colors.length)];
-
-           a(bulb).addClass("garland-bulb").css({
+           $(bulb).addClass("garland-bulb").css({
              backgroundColor: color,
-             width: c.bulbSize + "px",
-             height: c.bulbSize + "px",
+             width: settings.bulbSize + "px",
+             height: settings.bulbSize + "px",
              borderRadius: "50%",
              position: "absolute",
              top: "0px",
-             left: (i * (window.innerWidth / count)) + "px",
+             left: (i * (window.innerWidth / settings.bulbCount)) + "px",
              boxShadow: `0 0 15px ${color}`,
              transform: `translateY(${Math.sin(i) * 3}px)`,
              transition: "opacity 0.3s, box-shadow 0.3s, transform 1s ease-in-out",
              opacity: 1
            });
 
-           a(b).append(a(bulb));
+           $(container).append($(bulb));
            bulbs.push(bulb);
          }
 
@@ -40,8 +44,8 @@
        function animateBulbs() {
          interval = setInterval(() => {
            bulbs.forEach((bulb, i) => {
-             let opacity = Math.random() * 0.5 + 0.5;
-             let shift = Math.sin(Date.now() / 1000 + i) * 3;
+             const opacity = Math.random() * 0.5 + 0.5;
+             const shift = Math.sin(Date.now() / 1000 + i) * 3;
              bulb.style.opacity = opacity;
              bulb.style.transform = `translateY(${shift}px)`;
              bulb.style.boxShadow = `0 0 ${10 + Math.random() * 10}px ${bulb.style.backgroundColor}`;
@@ -49,7 +53,13 @@
          }, 300);
        }
 
-       a(b).addClass("garland-container").css({
+       this.clear = function () {
+         clearInterval(interval);
+         $(container).remove(); // полностью удаляем контейнер
+       };
+
+       // Инициализация контейнера
+       $(container).addClass("garland-container").css({
          position: "fixed",
          top: "0",
          left: "0",
@@ -62,24 +72,21 @@
 
        createBulbs();
 
-       // ✅ Сохраняем экземпляр, чтобы clear() работал
-       a(b).data("garland", this);
-
-       this.clear = function () {
-         clearInterval(interval);
-         a(b).remove();
-       };
+       // Сохраняем экземпляр для корректного вызова clear
+       $(container).data("garland", this);
      };
 
-     a.fn.garland = function (b) {
-       if (typeof b == "object" || b == undefined) {
+     $.fn.garland = function (optionsOrMethod) {
+       if (typeof optionsOrMethod === "object" || optionsOrMethod === undefined) {
          return this.each(function () {
-           new a.garland(this, b);
+           new $.garland(this, optionsOrMethod);
          });
-       } else if (typeof b == "string") {
+       } else if (typeof optionsOrMethod === "string") {
          return this.each(function () {
-           var instance = a(this).data("garland");
-           if (instance) instance.clear();
+           const instance = $(this).data("garland");
+           if (instance && typeof instance[optionsOrMethod] === "function") {
+             instance[optionsOrMethod]();
+           }
          });
        }
      };
@@ -121,7 +128,7 @@
 
        function showGarland() {
          window.garland = true;
-         var options = {
+         const options = {
            bulbCount: 40,
            bulbSize: 14
          };
@@ -132,7 +139,9 @@
 
        function hideGarland() {
          window.garland = false;
-         $(".garland-wrapper").garland("clear");
+         $(".garland-wrapper").each(function () {
+           $(this).garland("clear");
+         });
        }
      }
 
