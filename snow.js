@@ -42,9 +42,9 @@
    (function ($) {
      $.snowfall = function (container, options) {
        var config = $.extend({}, {
-         flakeCount: 80,
+         flakeCount: 100,
          flakeColor: "#ffffff",
-         flakePosition: "fixed",
+         flakePosition: "absolute",
          flakeIndex: 999999,
          minSize: 3,
          maxSize: 8,
