@@ -21,7 +21,6 @@
        let animationFrame;
        let width = $(element).width();
        let height = $(element).height();
-       let margin = 0;
 
        const colors = ['#FFFFFF', '#E0F7FA', '#E3F2FD', '#F0F8FF', '#F8FBFF'];
 
@@ -32,8 +31,8 @@
        function Snowflake() {
          this.size = random(options.minSize, options.maxSize);
          this.speed = random(options.minSpeed, options.maxSpeed);
-         this.x = random(margin, width - margin);
-         this.y = random(0, height); // случайная высота для равномерного распределения
+         this.x = random(0, width);
+         this.y = random(0, height);
          this.step = 0;
          this.stepSize = random(0.01, 0.1);
          this.rotation = random(0, 360);
@@ -59,6 +58,7 @@
          $(element).append($(el));
 
          this.update = () => {
+           // постоянное падение
            this.y += this.speed;
            this.x += Math.cos(this.step) * 0.5;
            this.step += this.stepSize;
@@ -70,8 +70,8 @@
 
            // ресет, когда снежинка ушла за низ
            if (this.y > height) {
-             this.y = -this.size; // старт чуть выше экрана
-             this.x = random(margin, width - margin);
+             this.y = -this.size; // старт немного выше экрана
+             this.x = random(0, width);
              this.speed = random(options.minSpeed, options.maxSpeed);
            }
          };
