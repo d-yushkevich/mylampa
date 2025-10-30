@@ -62,9 +62,12 @@
 
        createBulbs();
 
+       // ✅ Сохраняем экземпляр, чтобы clear() работал
+       a(b).data("garland", this);
+
        this.clear = function () {
          clearInterval(interval);
-         a(b).remove(); // ✅ полностью удаляем контейнер
+         a(b).remove();
        };
      };
 
@@ -129,9 +132,7 @@
 
        function hideGarland() {
          window.garland = false;
-         $(".garland-wrapper").each(function () {
-           $(this).garland("clear");
-         });
+         $(".garland-wrapper").garland("clear");
        }
      }
 
