@@ -265,7 +265,7 @@
            default: true
          },
          field: {
-           name: "❄️ Показывать снегопад"
+           name: "Показывать снегопад"
          },
          onChange: function (value) {
            Lampa.Storage.set("Snow", value);
