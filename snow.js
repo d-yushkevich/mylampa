@@ -2,11 +2,13 @@
    'use strict';
 
    Lampa.Platform.tv();
+
    if (!Date.now) {
      Date.now = function () {
        return new Date().getTime();
      };
    }
+
    (function () {
      "use strict";
      for (var e = ["webkit", "moz"], f = 0; f < e.length && !window.requestAnimationFrame; ++f) {
@@ -19,169 +21,145 @@
        window.requestAnimationFrame = function (a) {
          var b = Date.now();
          var c = Math.max(h + 16, b);
-         return (
-           setTimeout(function () {
-             a(h = c);
-           }, c - b)
-         );
+         return setTimeout(function () {
+           a(h = c);
+         }, c - b);
        };
        window.cancelAnimationFrame = clearTimeout;
      }
    })();
 
-   (function (a) {
-     a.snowfall = function (b, c) {
-       function d(d, e, f, g) {
-         this.x = d;
-         this.y = e;
-         this.size = f;
-         this.speed = g;
+   (function ($) {
+     $.snowfall = function (element, options) {
+       function Snowflake(x, y, size, speed) {
+         this.x = x;
+         this.y = y;
+         this.size = size;
+         this.speed = speed;
          this.step = 0;
-         this.stepSize = i(1, 10) / 100;
-         this.rotation = i(0, 360);
-         this.rotationSpeed = i(-0.5, 0.5);
-         if (c.collection) {
-           this.target = p[i(0, p.length - 1)];
-         }
+         this.stepSize = random(1, 10) / 100;
+         this.rotation = random(0, 360);
+         this.rotationSpeed = random(-0.5, 0.5);
 
-         var j = document.createElement("div");
-         // Цвета снежинок
-         var snowColors = ['#FFFFFF', '#E0F7FA', '#E3F2FD', '#F0F8FF', '#F8FBFF'];
-         var randomColor = snowColors[i(0, snowColors.length - 1)];
+         var flakeColors = ['#FFFFFF', '#E0F7FA', '#E3F2FD', '#F0F8FF', '#F8FBFF'];
+         var color = flakeColors[random(0, flakeColors.length - 1)];
 
-         a(j).attr({
-           class: "snowfall-flake"
-         }).css({
-           background: randomColor,
+         var el = document.createElement("div");
+         $(el).attr({ class: "snowfall-flake" }).css({
+           background: color,
            borderRadius: '50%',
-           position: c.flakePosition,
+           position: options.flakePosition,
            top: this.y,
            left: this.x,
            width: this.size,
            height: this.size,
-           opacity: i(7, 10) / 10,
-           boxShadow: "0 0 10px rgba(255,255,255,0.8)",
-           zIndex: c.flakeIndex,
+           opacity: random(7, 10) / 10,
+           boxShadow: "none", // убрали свечение
+           zIndex: options.flakeIndex,
            transformOrigin: 'center center',
            transition: 'transform 0.1s linear'
          });
 
-         if (a(b).get(0).tagName === a(document).get(0).tagName) {
-           a("body").append(a(j));
-           b = a("body");
+         if ($(element).get(0).tagName === $(document).get(0).tagName) {
+           $("body").append($(el));
+           element = $("body");
          } else {
-           a(b).append(a(j));
+           $(element).append($(el));
          }
 
-         this.element = j;
+         this.element = el;
 
          this.update = function () {
            this.y += this.speed;
-           if (this.y > k - (this.size + 6)) {
-             this.reset();
-           }
-
-           this.element.style.top = this.y + "px";
-           this.element.style.left = this.x + "px";
+           this.x += Math.cos(this.step) * 0.5;
            this.step += this.stepSize;
            this.rotation += this.rotationSpeed;
 
-           // Плавное покачивание снежинки
-           this.x += Math.cos(this.step) * 0.5;
+           this.element.style.top = this.y + "px";
+           this.element.style.left = this.x + "px";
+           this.element.style.transform = 'rotate(' + this.rotation + 'deg)';
 
-           if (this.x + this.size > l - m || this.x < m) {
+           // если снежинка ушла за границы, ресетим
+           if (this.y > height || this.x + this.size > width - margin || this.x < margin) {
              this.reset();
            }
          };
 
          this.reset = function () {
-           this.y = 0;
-           this.x = i(m, l - m);
-           this.stepSize = i(1, 10) / 100;
-           this.size = i(c.minSize * 100, c.maxSize * 100) / 100;
-           this.rotation = i(0, 360);
-           this.rotationSpeed = i(-0.5, 0.5);
+           // случайная стартовая позиция по вертикали и горизонтали
+           this.y = random(0, height);
+           this.x = random(margin, width - margin);
+           this.size = random(options.minSize * 100, options.maxSize * 100) / 100;
+           this.speed = random(options.minSpeed, options.maxSpeed);
+           this.stepSize = random(1, 10) / 100;
+           this.rotation = random(0, 360);
+           this.rotationSpeed = random(-0.5, 0.5);
            this.element.style.width = this.size + "px";
            this.element.style.height = this.size + "px";
-           this.speed = i(c.minSpeed, c.maxSpeed);
-           var randomColor = snowColors[i(0, snowColors.length - 1)];
-           this.element.style.background = randomColor;
+           this.element.style.background = flakeColors[random(0, flakeColors.length - 1)];
          };
        }
 
-       function e() {
-         for (j = 0; j < g.length; j += 1) {
-           g[j].update();
-         }
-         n = requestAnimationFrame(function () {
-           e();
-         });
+       function random(a, b) {
+         return Math.round(a + Math.random() * (b - a));
        }
 
-       var f = {
-         flakeCount: 40, // немного больше снежинок
-         flakeColor: "#FFFFFF",
+       function animate() {
+         for (var j = 0; j < flakes.length; j++) {
+           flakes[j].update();
+         }
+         animationFrame = requestAnimationFrame(animate);
+       }
+
+       var defaultOptions = {
+         flakeCount: 40,
          flakePosition: "absolute",
          flakeIndex: 999999,
          minSize: 4,
          maxSize: 10,
          minSpeed: 0.3,
-         maxSpeed: 1.2,
-         collection: false,
-         deviceorientation: false
+         maxSpeed: 1.2
        };
 
-       var g = [];
-       var h = f;
-       var c = a.extend(h, c);
+       options = $.extend(defaultOptions, options);
 
-       function i(a, b) {
-         return Math.round(a + Math.random() * (b - a));
-       }
+       var flakes = [];
+       var margin = 0;
+       var width = $(element).width();
+       var height = $(element).height();
+       var animationFrame;
 
-       a(b).data("snowfall", this);
-       var j = 0;
-       var k = a(b).height();
-       var l = a(b).width();
-       var m = 0;
-       var n = 0;
+       $(element).data("snowfall", this);
 
-       if (a(b).get(0).tagName === a(document).get(0).tagName) {
-         m = 25;
-       }
-
-       a(window).bind("resize", function () {
-         k = a(b)[0].clientHeight;
-         l = a(b)[0].offsetWidth;
+       $(window).on("resize", function () {
+         width = $(element).width();
+         height = $(element).height();
        });
 
-       j = 0;
-       for (; j < c.flakeCount; j += 1) {
-         g.push(new d(i(m, l - m), i(0, k), i(c.minSize * 100, c.maxSize * 100) / 100, i(c.minSpeed, c.maxSpeed)));
+       for (var i = 0; i < options.flakeCount; i++) {
+         flakes.push(new Snowflake(random(margin, width - margin), random(0, height), random(options.minSize * 100, options.maxSize * 100) / 100, random(options.minSpeed, options.maxSpeed)));
        }
 
-       e();
+       animate();
 
        this.clear = function () {
-         a(b).children(".snowfall-flake").remove();
-         cancelAnimationFrame(n);
+         $(element).children(".snowfall-flake").remove();
+         cancelAnimationFrame(animationFrame);
        };
      };
 
-     a.fn.snowfall = function (b) {
-       if (typeof b == "object" || b == undefined) {
-         return this.each(function (c) {
-           new a.snowfall(this, b);
+     $.fn.snowfall = function (options) {
+       if (typeof options === "object" || options === undefined) {
+         return this.each(function () {
+           new $.snowfall(this, options);
          });
-       } else if (typeof b == "string") {
-         return this.each(function (b) {
-           var c = a(this).data("snowfall");
-           if (c) {
-             c.clear();
+       } else if (typeof options === "string") {
+         return this.each(function () {
+           var instance = $(this).data("snowfall");
+           if (instance) {
+             instance.clear();
            }
          });
-       } else {
-         return undefined;
        }
      };
    })(jQuery);
@@ -189,7 +167,7 @@
    (function () {
      'use strict';
 
-     function a() {
+     function initSnow() {
        Lampa.SettingsApi.addParam({
          component: "interface",
          param: {
@@ -200,21 +178,21 @@
          field: {
            name: "Показывать снег"
          },
-         onChange: function (c) {
-           if (Lampa.Storage.field("WinterSnow") == true) {
+         onChange: function () {
+           if (Lampa.Storage.field("WinterSnow") === true) {
              showSnow();
            } else {
              hideSnow();
            }
          },
-         onRender: function (a) {
+         onRender: function () {
            setTimeout(function () {
              $("div[data-name=\"WinterSnow\"]").insertAfter("div[data-name=\"black_style\"]");
            }, 0);
          }
        });
 
-       if (Lampa.Storage.field("WinterSnow") == true) {
+       if (Lampa.Storage.field("WinterSnow") === true) {
          showSnow();
        } else {
          hideSnow();
@@ -222,14 +200,13 @@
 
        function showSnow() {
          window.winter = true;
-         var a = {
+         $(".background").snowfall({
            minSize: 4,
            maxSize: 10,
            minSpeed: 0.3,
            maxSpeed: 1.2,
            flakeCount: 40
-         };
-         $(".background").snowfall(a);
+         });
        }
 
        function hideSnow() {
@@ -239,11 +216,11 @@
      }
 
      if (window.appready) {
-       a();
+       initSnow();
      } else {
        Lampa.Listener.follow("app", function (b) {
-         if (b.type == "ready") {
-           a();
+         if (b.type === "ready") {
+           initSnow();
          }
        });
      }
