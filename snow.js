@@ -6,9 +6,9 @@
    (function ($) {
      $.snowfall = function (element, options) {
        const defaults = {
-         flakeCount: 40,
+         flakeCount: 80,
          minSize: 4,
-         maxSize: 10,
+         maxSize: 15,
          minSpeed: 0.3,
          maxSpeed: 1.2,
          flakeIndex: 999999,
