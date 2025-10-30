@@ -4,98 +4,81 @@
    Lampa.Platform.tv();
 
    (function ($) {
-     $.autumnLeaves = function (element, options) {
+     $.leafGarland = function (element, options) {
        let leaves = [];
-       let animationFrame;
+       let interval;
        const container = element;
 
        const settings = $.extend({
-         leafCount: 40,
-         minSize: 8,
-         maxSize: 15,
-         minSpeed: 0.5,
-         maxSpeed: 2,
+         leafCount: 20,
+         leafSize: 20,
          colors: ['#FF6B35', '#FFA62B', '#D4A76A', '#8B4513', '#CD853F', '#DA9100'],
-         leafPosition: 'absolute',
-         leafIndex: 999999
+         top: true // true = сверху, false = снизу
        }, options);
 
-       function random(a, b) {
-         return a + Math.random() * (b - a);
+       function createLeaves() {
+         const containerHeight = settings.top ? 0 : window.innerHeight - settings.leafSize;
+         for (let i = 0; i < settings.leafCount; i++) {
+           const leaf = document.createElement("div");
+           const color = settings.colors[Math.floor(Math.random() * settings.colors.length)];
+
+           $(leaf).addClass("leaf-garland").css({
+             backgroundColor: color,
+             width: settings.leafSize + "px",
+             height: settings.leafSize + "px",
+             borderRadius: "50% 0 50% 0",
+             position: "fixed",
+             top: containerHeight + "px",
+             left: (i * (window.innerWidth / settings.leafCount)) + "px",
+             transition: "opacity 0.5s, transform 1s ease-in-out",
+             opacity: 1
+           });
+
+           $(container).append($(leaf));
+           leaves.push(leaf);
+         }
+
+         animateLeaves();
        }
 
-       function Leaf() {
-         this.size = random(settings.minSize, settings.maxSize);
-         this.speed = random(settings.minSpeed, settings.maxSpeed);
-         this.x = random(0, window.innerWidth);
-         this.y = random(-40, 0); // старт чуть выше экрана
-         this.step = 0;
-         this.stepSize = random(0.01, 0.05);
-         this.rotation = random(0, 360);
-         this.rotationSpeed = random(-2, 2);
-         const color = settings.colors[Math.floor(random(0, settings.colors.length))];
-
-         const el = document.createElement("div");
-         this.element = el;
-
-         $(el).addClass("autumn-leaf").css({
-           width: this.size + "px",
-           height: this.size + "px",
-           position: settings.leafPosition,
-           top: this.y + "px",
-           left: this.x + "px",
-           background: color,
-           borderRadius: '50% 0 50% 0',
-           zIndex: settings.leafIndex,
-           transform: `rotate(${this.rotation}deg)`,
-           transition: 'transform 0.1s linear'
-         });
-
-         $(container).append($(el));
-
-         this.update = () => {
-           this.y += this.speed;
-           this.x += Math.cos(this.step) * 0.5;
-           this.step += this.stepSize;
-           this.rotation += this.rotationSpeed;
-
-           this.element.style.top = this.y + "px";
-           this.element.style.left = this.x + "px";
-           this.element.style.transform = `rotate(${this.rotation}deg)`;
-
-           if (this.y > window.innerHeight) {
-             this.y = -this.size;
-             this.x = random(0, window.innerWidth);
-             this.speed = random(settings.minSpeed, settings.maxSpeed);
-           }
-         };
+       function animateLeaves() {
+         interval = setInterval(() => {
+           leaves.forEach((leaf, i) => {
+             const shift = Math.sin(Date.now() / 1000 + i) * 5;
+             const opacity = 0.7 + Math.random() * 0.3;
+             leaf.style.transform = `translateY(${shift}px)`;
+             leaf.style.opacity = opacity;
+           });
+         }, 200);
        }
 
-       function animate() {
-         leaves.forEach(l => l.update());
-         animationFrame = requestAnimationFrame(animate);
-       }
-
-       for (let i = 0; i < settings.leafCount; i++) {
-         leaves.push(new Leaf());
-       }
-
-       animate();
-
-       this.clear = () => {
-         leaves.forEach(l => $(l.element).remove());
-         cancelAnimationFrame(animationFrame);
+       this.clear = function () {
+         clearInterval(interval);
+         $(container).remove();
        };
 
-       $(container).data("autumnLeaves", this);
+       $(container).addClass("leaf-garland-container").css({
+         position: "fixed",
+         top: settings.top ? "0" : "auto",
+         bottom: settings.top ? "auto" : "0",
+         left: "0",
+         width: "100%",
+         height: settings.leafSize + "px",
+         zIndex: 999999,
+         pointerEvents: "none",
+         overflow: "hidden"
+       });
+
+       createLeaves();
+       $(container).data("leafGarland", this);
      };
 
-     $.fn.autumnLeaves = function (optionsOrMethod) {
+     $.fn.leafGarland = function (optionsOrMethod) {
        if (typeof optionsOrMethod === "object" || optionsOrMethod === undefined) {
-         return this.each(function () { new $.autumnLeaves(this, optionsOrMethod); });
+         return this.each(function () { new $.leafGarland(this, optionsOrMethod); });
        } else if (typeof optionsOrMethod === "string") {
          return this.each(function () {
-           const instance = $(this).data("autumnLeaves");
+           const instance = $(this).data("leafGarland");
            if (instance && typeof instance[optionsOrMethod] === "function") instance[optionsOrMethod]();
          });
        }
@@ -103,49 +86,46 @@
    })(jQuery);
 
    (function () {
-     function initLeaves() {
+     function initLeafGarland() {
        Lampa.SettingsApi.addParam({
          component: "interface",
-         param: { name: "AutumnLeaves", type: "trigger", default: true },
-         field: { name: "Показывать осенние листья" },
+         param: { name: "LeafGarland", type: "trigger", default: true },
+         field: { name: "Показывать осеннюю гирлянду" },
          onChange: function () {
-           if (Lampa.Storage.field("AutumnLeaves")) showLeaves();
-           else hideLeaves();
+           if (Lampa.Storage.field("LeafGarland")) showGarland();
+           else hideGarland();
          },
          onRender: function () {
            setTimeout(() => {
-             $("div[data-name='AutumnLeaves']").insertAfter("div[data-name='black_style']");
+             $("div[data-name='LeafGarland']").insertAfter("div[data-name='black_style']");
            }, 0);
          }
        });
 
-       if (Lampa.Storage.field("AutumnLeaves")) showLeaves();
-       else hideLeaves();
+       if (Lampa.Storage.field("LeafGarland")) showGarland();
+       else hideGarland();
 
-       function showLeaves() {
-         window.autumn = true;
-         if ($(".autumn-leaves-wrapper").length === 0) {
-           $("<div class='autumn-leaves-wrapper'></div>").appendTo("body").autumnLeaves({
-             leafCount: 40,
-             minSize: 8,
-             maxSize: 15,
-             minSpeed: 0.5,
-             maxSpeed: 2
-           });
+       function showGarland() {
+         window.leafGarland = true;
+         if ($(".leaf-garland-wrapper-top").length === 0) {
+           $("<div class='leaf-garland-wrapper-top'></div>").appendTo("body").leafGarland({ top: true, leafCount: 20, leafSize: 20 });
+         }
+         if ($(".leaf-garland-wrapper-bottom").length === 0) {
+           $("<div class='leaf-garland-wrapper-bottom'></div>").appendTo("body").leafGarland({ top: false, leafCount: 20, leafSize: 20 });
          }
        }
 
-       function hideLeaves() {
-         window.autumn = false;
-         $(".autumn-leaves-wrapper").each(function () {
-           $(this).autumnLeaves("clear");
+       function hideGarland() {
+         window.leafGarland = false;
+         $(".leaf-garland-wrapper-top, .leaf-garland-wrapper-bottom").each(function () {
+           $(this).leafGarland("clear");
          });
        }
      }
 
-     if (window.appready) initLeaves();
+     if (window.appready) initLeafGarland();
      else Lampa.Listener.follow("app", b => {
-       if (b.type === "ready") initLeaves();
+       if (b.type === "ready") initLeafGarland();
      });
    })();
  })();
