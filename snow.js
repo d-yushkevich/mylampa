@@ -254,14 +254,46 @@
 
   })(jQuery);
 
-  // Автоматический запуск метели с уведомлением
+  // Система управления снегом с настройкой
   (function () {
     'use strict';
 
     var snowInstance = null;
-    var notificationShown = false;
 
-    function startBlizzard() {
+    function initializeSnow() {
+      // Добавляем настройку для включения/выключения снега
+      Lampa.SettingsApi.addParam({
+        component: "interface",
+        param: {
+          name: "Snow",
+          type: "trigger",
+          default: true
+        },
+        field: {
+          name: "❄️ Показывать снегопад"
+        },
+        onChange: function (value) {
+          Lampa.Storage.set("Snow", value);
+          if (value) {
+            enableSnow();
+          } else {
+            disableSnow();
+          }
+        },
+        onRender: function (element) {
+          setTimeout(function () {
+            $("div[data-name=\"Snow\"]").insertAfter("div[data-name=\"black_style\"]");
+          }, 0);
+        }
+      });
+
+      // Проверка начального состояния
+      if (Lampa.Storage.field("Snow") !== false) {
+        setTimeout(enableSnow, 1000);
+      }
+    }
+
+    function enableSnow() {
       if (snowInstance) return;
       
       try {
@@ -282,29 +314,35 @@
         $(".background").snowfall(blizzardConfig);
         snowInstance = $(".background").data("snowfall");
         
-        // Показываем уведомление на 3 секунды
-        if (!notificationShown) {
-          Lampa.Noty.show("❄️ Запущена анимированная метель");
-          notificationShown = false;
-          
-          // Автоматически скрываем через 3 секунды
-          setTimeout(() => {
-            // Уведомление само скроется
-          }, 3000);
-        }
+        // Показываем уведомление
+        Lampa.Noty.show("❄️ Снегопад включен");
         
       } catch (error) {
-        console.error("Blizzard initialization error:", error);
+        console.error("Snow initialization error:", error);
       }
     }
 
-    // Запуск при готовности приложения
+    function disableSnow() {
+      if (!snowInstance) return;
+      
+      try {
+        $(".background").snowfall("clear");
+        snowInstance = null;
+        
+        // Показываем уведомление
+        Lampa.Noty.show("Снегопад отключен");
+      } catch (error) {
+        console.error("Snow cleanup error:", error);
+      }
+    }
+
+    // Инициализация
     if (window.appready) {
-      setTimeout(startBlizzard, 1000);
+      initializeSnow();
     } else {
       Lampa.Listener.follow("app", function (event) {
         if (event.type == "ready") {
-          setTimeout(startBlizzard, 1000);
+          initializeSnow();
         }
       });
     }
