@@ -7,6 +7,7 @@
        return new Date().getTime();
      };
    }
+
    (function () {
      "use strict";
      for (var e = ["webkit", "moz"], f = 0; f < e.length && !window.requestAnimationFrame; ++f) {
@@ -19,11 +20,9 @@
        window.requestAnimationFrame = function (a) {
          var b = Date.now();
          var c = Math.max(h + 16, b);
-         return (
-           setTimeout(function () {
-             a(h = c);
-           }, c - b)
-         );
+         return setTimeout(function () {
+           a(h = c);
+         }, c - b);
        };
        window.cancelAnimationFrame = clearTimeout;
      }
@@ -31,27 +30,20 @@
 
    (function (a) {
      a.snowfall = function (b, c) {
-       function d(d, e, f, g) {
-         this.x = d;
-         this.y = e;
-         this.size = f;
-         this.speed = g;
+       function Flake(x, y, size, speed) {
+         this.x = x;
+         this.y = y;
+         this.size = size;
+         this.speed = speed;
          this.step = 0;
-         this.stepSize = i(1, 10) / 100;
-         this.rotation = i(0, 360);
-         this.rotationSpeed = i(-0.5, 0.5);
-         if (c.collection) {
-           this.target = p[i(0, p.length - 1)];
-         }
+         this.stepSize = rand(1, 10) / 100;
+         this.rotation = rand(0, 360);
 
-         var j = document.createElement("div");
-         // Цвета снежинок
          var snowColors = ['#FFFFFF', '#E0F7FA', '#E3F2FD', '#F0F8FF', '#F8FBFF'];
-         var randomColor = snowColors[i(0, snowColors.length - 1)];
+         var randomColor = snowColors[rand(0, snowColors.length - 1)];
+         var flake = document.createElement("div");
 
-         a(j).attr({
-           class: "snowfall-flake"
-         }).css({
+         a(flake).attr({ class: "snowfall-flake" }).css({
            background: randomColor,
            borderRadius: '50%',
            position: c.flakePosition,
@@ -59,129 +51,140 @@
            left: this.x,
            width: this.size,
            height: this.size,
-           opacity: i(7, 10) / 10,
+           opacity: rand(7, 10) / 10,
            boxShadow: "0 0 10px rgba(255,255,255,0.8)",
            zIndex: c.flakeIndex,
-           transformOrigin: 'center center',
-           transition: 'transform 0.1s linear'
          });
 
          if (a(b).get(0).tagName === a(document).get(0).tagName) {
-           a("body").append(a(j));
+           a("body").append(a(flake));
            b = a("body");
          } else {
-           a(b).append(a(j));
+           a(b).append(a(flake));
          }
 
-         this.element = j;
+         this.element = flake;
 
          this.update = function () {
            this.y += this.speed;
-           if (this.y > k - (this.size + 6)) {
-             this.reset();
-           }
+           this.x += Math.cos(this.step) * 0.5;
+           this.step += this.stepSize;
 
            this.element.style.top = this.y + "px";
            this.element.style.left = this.x + "px";
-           this.step += this.stepSize;
-           this.rotation += this.rotationSpeed;
 
-           // Плавное покачивание снежинки
-           this.x += Math.cos(this.step) * 0.5;
+           // Снег достиг "земли" (нижней границы)
+           if (this.y > groundLevel - this.size) {
+             drawSnowOnGround(this.x, this.size);
+             this.reset();
+           }
 
-           if (this.x + this.size > l - m || this.x < m) {
+           if (this.x + this.size > width - margin || this.x < margin) {
              this.reset();
            }
          };
 
          this.reset = function () {
            this.y = 0;
-           this.x = i(m, l - m);
-           this.stepSize = i(1, 10) / 100;
-           this.size = i(c.minSize * 100, c.maxSize * 100) / 100;
-           this.rotation = i(0, 360);
-           this.rotationSpeed = i(-0.5, 0.5);
+           this.x = rand(margin, width - margin);
+           this.size = rand(c.minSize * 100, c.maxSize * 100) / 100;
+           this.speed = rand(c.minSpeed, c.maxSpeed);
            this.element.style.width = this.size + "px";
            this.element.style.height = this.size + "px";
-           this.speed = i(c.minSpeed, c.maxSpeed);
-           var randomColor = snowColors[i(0, snowColors.length - 1)];
-           this.element.style.background = randomColor;
          };
        }
 
-       function e() {
-         for (j = 0; j < g.length; j += 1) {
-           g[j].update();
+       // Рисуем сугробы
+       function drawSnowOnGround(x, size) {
+         const groundX = Math.floor(x);
+         const ctx = snowCanvas.getContext("2d");
+
+         ctx.fillStyle = "rgba(255,255,255,0.95)";
+         ctx.beginPath();
+         ctx.arc(groundX, groundLevel - size / 2, size / 2, 0, Math.PI * 2);
+         ctx.fill();
+
+         // Сугроб слишком большой — слегка "таяние"
+         snowHeight++;
+         if (snowHeight > 300) {
+           fadeSnow();
+           snowHeight = 0;
          }
-         n = requestAnimationFrame(function () {
-           e();
-         });
        }
 
-       var f = {
-         flakeCount: 40, // немного больше снежинок
-         flakeColor: "#FFFFFF",
+       function fadeSnow() {
+         const ctx = snowCanvas.getContext("2d");
+         ctx.fillStyle = "rgba(255,255,255,0.9)";
+         ctx.globalAlpha = 0.8;
+         ctx.fillRect(0, 0, width, 100);
+         ctx.globalAlpha = 1.0;
+       }
+
+       function loop() {
+         for (let j = 0; j < flakes.length; j++) {
+           flakes[j].update();
+         }
+         animation = requestAnimationFrame(loop);
+       }
+
+       const defaults = {
+         flakeCount: 50,
          flakePosition: "absolute",
          flakeIndex: 999999,
          minSize: 4,
          maxSize: 10,
          minSpeed: 0.3,
          maxSpeed: 1.2,
-         collection: false,
-         deviceorientation: false
        };
 
-       var g = [];
-       var h = f;
-       var c = a.extend(h, c);
+       let flakes = [];
+       let settings = a.extend(defaults, c);
+       const rand = (a, b) => Math.round(a + Math.random() * (b - a));
 
-       function i(a, b) {
-         return Math.round(a + Math.random() * (b - a));
-       }
+       const height = a(b).height();
+       const width = a(b).width();
+       const margin = 0;
+       const groundLevel = height - 50; // высота сугробов
+       let snowHeight = 0;
+       let animation;
 
-       a(b).data("snowfall", this);
-       var j = 0;
-       var k = a(b).height();
-       var l = a(b).width();
-       var m = 0;
-       var n = 0;
-
-       if (a(b).get(0).tagName === a(document).get(0).tagName) {
-         m = 25;
-       }
-
-       a(window).bind("resize", function () {
-         k = a(b)[0].clientHeight;
-         l = a(b)[0].offsetWidth;
+       // Создаём canvas для сугробов
+       const snowCanvas = document.createElement("canvas");
+       snowCanvas.className = "snowfall-ground";
+       snowCanvas.width = width;
+       snowCanvas.height = 60;
+       a(b).append(snowCanvas);
+       a(snowCanvas).css({
+         position: "absolute",
+         bottom: "0",
+         left: "0",
+         zIndex: 999998,
        });
 
-       j = 0;
-       for (; j < c.flakeCount; j += 1) {
-         g.push(new d(i(m, l - m), i(0, k), i(c.minSize * 100, c.maxSize * 100) / 100, i(c.minSpeed, c.maxSpeed)));
+       // Создаём снежинки
+       for (let j = 0; j < settings.flakeCount; j++) {
+         flakes.push(new Flake(rand(margin, width - margin), rand(0, height), rand(settings.minSize * 100, settings.maxSize * 100) / 100, rand(settings.minSpeed, settings.maxSpeed)));
        }
 
-       e();
+       loop();
 
        this.clear = function () {
          a(b).children(".snowfall-flake").remove();
-         cancelAnimationFrame(n);
+         a(b).children(".snowfall-ground").remove();
+         cancelAnimationFrame(animation);
        };
      };
 
      a.fn.snowfall = function (b) {
        if (typeof b == "object" || b == undefined) {
-         return this.each(function (c) {
+         return this.each(function () {
            new a.snowfall(this, b);
          });
        } else if (typeof b == "string") {
-         return this.each(function (b) {
-           var c = a(this).data("snowfall");
-           if (c) {
-             c.clear();
-           }
+         return this.each(function () {
+           const c = a(this).data("snowfall");
+           if (c) c.clear();
          });
-       } else {
-         return undefined;
        }
      };
    })(jQuery);
@@ -189,7 +192,7 @@
    (function () {
      'use strict';
 
-     function a() {
+     function setupSnow() {
        Lampa.SettingsApi.addParam({
          component: "interface",
          param: {
@@ -198,16 +201,16 @@
            default: true
          },
          field: {
-           name: "Показывать снег"
+           name: "Показывать снег и сугробы"
          },
-         onChange: function (c) {
+         onChange: function () {
            if (Lampa.Storage.field("WinterSnow") == true) {
              showSnow();
            } else {
              hideSnow();
            }
          },
-         onRender: function (a) {
+         onRender: function () {
            setTimeout(function () {
              $("div[data-name=\"WinterSnow\"]").insertAfter("div[data-name=\"black_style\"]");
            }, 0);
@@ -222,14 +225,14 @@
 
        function showSnow() {
          window.winter = true;
-         var a = {
+         var options = {
            minSize: 4,
            maxSize: 10,
            minSpeed: 0.3,
            maxSpeed: 1.2,
-           flakeCount: 40
+           flakeCount: 50
          };
-         $(".background").snowfall(a);
+         $(".background").snowfall(options);
        }
 
        function hideSnow() {
@@ -239,11 +242,11 @@
      }
 
      if (window.appready) {
-       a();
+       setupSnow();
      } else {
        Lampa.Listener.follow("app", function (b) {
          if (b.type == "ready") {
-           a();
+           setupSnow();
          }
        });
      }
