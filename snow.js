@@ -270,11 +270,23 @@
                      if (value) {
                          setTimeout(enableSnow, 100);
                      } else {
-                         // ПРОСТО УДАЛЯЕМ СНЕЖИНКИ
-                         $(".snowfall-flake").remove();
-                         Lampa.Noty.show("Снегопад отключен");
+                         try {
+                             // Останавливаем все активные снегопады корректно
+                             $(".background").each(function () {
+                                 var instance = $(this).data("snowfall");
+                                 if (instance && typeof instance.clear === "function") {
+                                     instance.clear();
+                                 }
+                             });
+                             
+                             $(".snowfall-flake").remove(); // На всякий случай
+                             Lampa.Noty.show("Снегопад отключен");
+                         } catch (e) {
+                             console.error("Ошибка при остановке снега:", e);
+                         }
                      }
                  },
+
                  onRender: function (element) {
                      setTimeout(function () {
                          $("div[data-name=\"Snow\"]").insertAfter("div[data-name=\"black_style\"]");
